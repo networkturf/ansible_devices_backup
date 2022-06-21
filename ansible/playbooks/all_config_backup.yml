@@ -19,9 +19,6 @@
         path: /home/$USER/config_backups/{{ DTG }}
         state: directory
 
-  - name: GET CREDENTIALS
-    include_vars: secrets.yml
-
   - name: DEFINE CONNECTION
     set_fact:
        connection:

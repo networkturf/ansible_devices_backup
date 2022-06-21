@@ -10,7 +10,6 @@
        connection:
           authorize: yes
           host: "{{ inventory_hostname }}"
-          username: "{{ creds['username'] }}"
 
   - name: show run
     ios_command:

@@ -7,7 +7,7 @@
   gather_facts: no
 
   vars:
-    config_dir: "/home/kvaidya/config_backups/"
+    config_dir: "/home/$USER/config_backups/"
     config_filename: "{{ inventory_hostname }}.txt"
     connection_settings:
       host: "{{ ansible_host }}"
@@ -29,6 +29,6 @@
     - name: GET RUNNING CONFIG OF JUNIPER DEVICE
       juniper_junos_config:
         provider: "{{ connection_settings }}"
-        dest: "/home/kvaidya/config_backups/{{ inventory_hostname }}.txt"
+        dest: "/home/$USER/config_backups/{{ inventory_hostname }}.txt"
         format: "text"
         retrieve: committed

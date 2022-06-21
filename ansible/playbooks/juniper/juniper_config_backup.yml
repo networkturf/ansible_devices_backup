@@ -1,0 +1,34 @@
+---
+- name: Get device uptime
+  hosts: juniper
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars:
+    config_dir: "/home/kvaidya/config_backups/"
+    config_filename: "{{ inventory_hostname }}.txt"
+    connection_settings:
+      host: "{{ ansible_host }}"
+
+  tasks:
+    
+    - name: GET ANSIBLE DATE/TIME FACTS
+      setup: 
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+
+    - name: confirm/create device configuration directory
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+      run_once: yes
+      delegate_to: localhost
+
+    - name: GET RUNNING CONFIG OF JUNIPER DEVICE
+      juniper_junos_config:
+        provider: "{{ connection_settings }}"
+        dest: "/home/kvaidya/config_backups/{{ inventory_hostname }}.txt"
+        format: "text"
+        retrieve: committed

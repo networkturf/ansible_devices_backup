@@ -1,0 +1,25 @@
+---
+- hosts: cisco
+  gather_facts: yes
+  connection: local
+
+  tasks:
+  - name: GET CREDENTIALS
+    include_vars: secrets.yml
+
+  - name: DEFINE CONNECTION
+    set_fact:
+       connection:
+          authorize: yes
+          host: "{{ inventory_hostname }}"
+          username: "{{ creds['username'] }}"
+  
+  - name: Add user 
+    ios_config:
+       provider: "{{ connection }}"
+       lines:
+        - username kvaidya privilege 15 secret 5 $1$OnSG$/IRYhum8i0A7Cej7/.hBo/     
+
+  - name: Write memory
+    ios_config:
+       save_when: always       

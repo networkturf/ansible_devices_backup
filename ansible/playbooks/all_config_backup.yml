@@ -1,0 +1,100 @@
+---
+- hosts: arista
+  gather_facts: yes
+  connection: local
+
+  tasks:
+
+  - name: GET ANSIBLE DATE/TIME FACTS
+    setup: 
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+
+  - name: STORE DTG AS A FACT
+    set_fact:
+        DTG: "{{ ansible_date_time.date }}"
+
+  - name: CREATE DIRECTORY {{ DTG }}
+    file:
+        path: /home/$USER/config_backups/{{ DTG }}
+        state: directory
+
+  - name: GET CREDENTIALS
+    include_vars: secrets.yml
+
+  - name: DEFINE CONNECTION
+    set_fact:
+       connection:
+          authorize: yes
+          host: "{{ inventory_hostname }}"
+          username: "{{ creds['username'] }}"
+
+  - name: GET RUNNING CONFIG OF ARISTA DEVICES
+    eos_command:
+      provider: "{{ connection }}"
+      commands:
+        - show run
+    register: arista_running
+
+  - name: save output
+    copy:
+      content: "{{ arista_running.stdout[0] }}"
+      dest: "/home/$USER/config_backups/{{ DTG }}/{{ inventory_hostname }}.txt"
+
+
+- hosts: cisco
+  gather_facts: yes
+  connection: local
+ 
+  tasks:
+
+  - name: DEFINE CONNECTION
+    set_fact:
+       connection:
+          authorize: yes
+
+  - name: GET RUNNING CONFIG OF CISCO DEVICES
+    ios_command:
+      provider: "{{ connection }}"
+      commands:
+        - show run
+    register: cisco_running
+
+  - name: save output
+    copy:
+      content: "{{ cisco_running.stdout[0] }}"
+      dest: "/home/$USER/config_backups/{{ ansible_date_time.date }}/{{ inventory_hostname }}.txt"
+
+
+- hosts: juniper
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars:
+    config_dir: "/home/$USER/config_backups/"
+    config_filename: "{{ inventory_hostname }}.txt"
+    connection_settings:
+      host: "{{ ansible_host }}"
+
+  tasks:
+    
+    - name: GET ANSIBLE DATE/TIME FACTS
+      setup: 
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+
+    - name: confirm/create device configuration directory
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+      run_once: yes
+      delegate_to: localhost
+
+    - name: GET RUNNING CONFIG OF JUNIPER DEVICE
+      juniper_junos_config:
+        provider: "{{ connection_settings }}"
+        dest: "/home/$USER/config_backups/{{ ansible_date_time.date }}/{{ inventory_hostname }}.txt"
+        format: text
+        retrieve: committed

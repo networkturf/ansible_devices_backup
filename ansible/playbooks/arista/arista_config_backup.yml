@@ -1,0 +1,37 @@
+- hosts: arista
+  gather_facts: yes
+  connection: local
+
+  tasks:
+
+  - name: GET ANSIBLE DATE/TIME FACTS
+    setup:
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+
+  - name: STORE DTG AS A FACT
+    set_fact:
+        DTG: "{{ ansible_date_time.date }}"
+
+  - name: CREATE DIRECTORY {{ DTG }}
+    file:
+        path: /home/$USER/config_backups/{{ DTG }}
+        state: directory
+
+  - name: DEFINE CONNECTION
+    set_fact:
+       connection:
+          authorize: yes
+          host: "{{ inventory_hostname }}"
+
+  - name: show run
+    eos_command:
+      provider: "{{ connection }}"
+      commands:
+        - show run
+    register: config
+
+  - name: save output
+    copy:
+      content: "{{ config.stdout[0] }}"
+      dest: "/home/$USER/config_backups/{{ DTG }}/{{ inventory_hostname }}.txt"

@@ -1,0 +1,18 @@
+---
+- hosts: arista
+  gather_facts: yes
+  connection: local
+
+  tasks:
+
+  - name: DEFINE CONNECTION
+    set_fact:
+       connection:
+          authorize: yes
+          host: "{{ inventory_hostname }}"
+
+  - name: add lines of configuration
+    eos_config:
+      provider: "{{ connection }}"
+      lines:
+        - username test password test124 
